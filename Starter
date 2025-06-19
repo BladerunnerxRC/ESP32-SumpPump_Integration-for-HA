@@ -1,3 +1,15 @@
+# Control: Use an ESP32/ESP8266 + a 5 V relay (e.g. a Sonoff Basic flashed with ESPHome, or a separate ESP module driving a relay) wired to the pump’s control terminals or power line.
+# Monitoring (optional but recommended):
+# Current sensor (e.g. ACS712) on the pump’s power line to detect run state & draw.
+# Temperature sensors (e.g. DS18B20) on supply/return plumbing to drive thermostatic logic.
+# WIRING
+# Line voltage → ACS712 → Pump
+# ESP relay in series with the pump’s hot lead
+# ESP GPIO → Relay IN
+# ESP 3V3 & GND → ACS712 VCC & GND
+# ACS712 OUT → ESP ADC pin
+# DS18B20 data → ESP digital pin + 4.7 K pull-up to 3V3
+
 esphome:
   name: pro_series_pump
   platform: ESP32
