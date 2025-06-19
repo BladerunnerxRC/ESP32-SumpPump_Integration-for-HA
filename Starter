@@ -1,0 +1,63 @@
+esphome:
+  name: pro_series_pump
+  platform: ESP32
+  board: esp32dev
+
+wifi:
+  ssid: "YOUR_SSID"
+  password: "YOUR_PASS"
+
+# Enable logging and Home Assistant API
+logger:
+api:
+ota:
+
+# ---------- Sensors ----------
+sensor:
+  - platform: adc
+    pin: GPIO35
+    name: "Pump Current"
+    update_interval: 5s
+    attenuation: 11db
+    filters:
+      - multiply: 2.0    # calibration factor for ACS712
+    unit_of_measurement: "A"
+
+  - platform: dallas
+    pin: GPIO4
+    update_interval: 10s
+  - platform: template
+    name: "Supply Temp"
+    lambda: |-
+      if (id(dallas).has_id("28-00000xxxxxxx")) {
+        return id(dallas).get_temperature("28-00000xxxxxxx");
+      } else {
+        return NAN;
+      }
+    unit_of_measurement: "°C"
+  
+# ---------- Binary Switch ----------
+switch:
+  - platform: gpio
+    pin: GPIO16
+    id: pump_relay
+    name: "Pro Series Pump Relay"
+    icon: "mdi:water-pump"
+
+# ---------- Automations (on-device) ----------
+# turn pump on if supply > return + delta
+automation:
+  - alias: "Pump Control by ΔT"
+    trigger:
+      platform: sensor
+      sensor_id: supply_temp
+      above: !lambda 'return id(return_temp).state + 5.0;'
+    action:
+      - switch.turn_on: pump_relay
+  - alias: "Pump Off by ΔT"
+    trigger:
+      platform: sensor
+      sensor_id: supply_temp
+      below: !lambda 'return id(return_temp).state + 2.0;'
+    action:
+      - switch.turn_off: pump_relay
